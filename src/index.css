@@ -1,0 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-slate-50: #F8FAFC;
+  --color-slate-100: #F1F5F9;
+  --color-slate-200: #E2E8F0;
+  --color-slate-800: #1E293B;
+  --color-slate-900: #0F172A;
+  
+  --color-blue-50: #EFF6FF;
+  --color-blue-100: #DBEAFE;
+  --color-blue-200: #BFDBFE;
+  --color-blue-600: #2563EB;
+  --color-blue-700: #1D4ED8;
+}
+
+@layer base {
+  body {
+    @apply font-sans antialiased text-slate-800 bg-[#F1F5F9];
+  }
+}
+
+@layer components {
+  .glass-nav {
+    @apply bg-white/95 border-b border-slate-200 backdrop-blur-md sticky top-0 z-50;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 text-white transition-colors duration-200 hover:bg-blue-700 rounded-lg font-semibold;
+  }
+  
+  .product-card {
+    @apply bg-white transition-all duration-200 border border-slate-200 rounded-xl overflow-hidden hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/50;
+  }
+  
+  .badge-condition {
+    @apply text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-wider;
+  }
+}
+

@@ -1,0 +1,82 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Student profile information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "college": { "type": "string" },
+        "avatar": { "type": "string" },
+        "rating": { "type": "number" },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "college"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Item listed for sale in the marketplace",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string" },
+        "condition": { "type": "string", "enum": ["New", "Used - Like New", "Used - Good", "Used - Fair"] },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "sellerId": { "type": "string" },
+        "sellerName": { "type": "string" },
+        "college": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["active", "sold", "archived"] },
+        "savedBy": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["title", "price", "category", "condition", "sellerId"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Direct message between buyer and seller",
+      "type": "object",
+      "properties": {
+        "chatId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["chatId", "senderId", "receiverId", "text"]
+    },
+    "Chat": {
+      "title": "Chat",
+      "description": "Conversation between two users about a product",
+      "type": "object",
+      "properties": {
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "productId": { "type": "string" },
+        "productTitle": { "type": "string" },
+        "lastMessage": { "type": "string" },
+        "lastTimestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["participants", "productId"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "All student users"
+    },
+    "products/{productId}": {
+      "schema": "Product",
+      "description": "Marketplace listings"
+    },
+    "chats/{chatId}": {
+      "schema": "Chat",
+      "description": "Chat sessions"
+    },
+    "chats/{chatId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Individual messages in a chat"
+    }
+  }
+}

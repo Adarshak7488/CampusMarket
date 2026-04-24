@@ -24,9 +24,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const userDoc = await getDoc(doc(db, 'users', fUser.uid));
         if (userDoc.exists()) {
           setUser({ id: fUser.uid, ...userDoc.data() } as User);
-        } else {
-          setUser(null);
-        }
+       } else {
+  
+  setUser({
+    id: fUser.uid,
+    name: fUser.displayName || 'User',
+    email: fUser.email || '',
+    college: '',
+    avatar: fUser.photoURL || '',
+    createdAt: new Date().toISOString(),
+  } as User);
+}
       } else {
         setUser(null);
       }

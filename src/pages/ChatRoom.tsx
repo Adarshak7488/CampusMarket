@@ -4,7 +4,7 @@ import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, doc, getDoc 
 import { db } from '../lib/firebase';
 import { useAuth } from '../lib/AuthContext';
 import { Message, Chat, Product } from '../types';
-import { Send, ArrowLeft, Loader2, Info, ShoppingBag, ShieldCheck, User } from 'lucide-react';
+import { Send, ArrowLeft, Loader2, ShoppingBag, ShieldCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -22,127 +22,122 @@ const ChatRoom = () => {
 
   useEffect(() => {
     if (!id || !user) return;
-
-    // Fetch chat metadata
     const chatRef = doc(db, 'chats', id);
     const unsubChat = onSnapshot(chatRef, async (snap) => {
       if (snap.exists()) {
         const chatData = { id: snap.id, ...snap.data() } as Chat;
         setChat(chatData);
-        
-        // Fetch product info if not already fetched
         if (!product) {
           const prodDoc = await getDoc(doc(db, 'products', chatData.productId));
-          if (prodDoc.exists()) {
-            setProduct({ id: prodDoc.id, ...prodDoc.data() } as Product);
-          }
+          if (prodDoc.exists()) setProduct({ id: prodDoc.id, ...prodDoc.data() } as Product);
         }
-      } else {
-        navigate('/chats');
-      }
+      } else { navigate('/chats'); }
     });
 
-    // Sub to messages
-    const qMessages = query(
-      collection(db, 'chats', id, 'messages'),
-      orderBy('timestamp', 'asc')
-    );
-
+    const qMessages = query(collection(db, 'chats', id, 'messages'), orderBy('timestamp', 'asc'));
     const unsubMessages = onSnapshot(qMessages, (snapshot) => {
       setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Message)));
       setLoading(false);
       setTimeout(() => scrollRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     });
 
-    return () => {
-      unsubChat();
-      unsubMessages();
-    };
+    return () => { unsubChat(); unsubMessages(); };
   }, [id, user]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !user || !chat || !id) return;
-
     const text = newMessage;
     setNewMessage('');
-    
     const receiverId = chat.participants.find(p => p !== user.id) || '';
-
     try {
       await addDoc(collection(db, 'chats', id, 'messages'), {
-        chatId: id,
-        senderId: user.id,
-        receiverId,
-        text,
+        chatId: id, senderId: user.id, receiverId, text,
         timestamp: new Date().toISOString()
       });
-
       await updateDoc(doc(db, 'chats', id), {
-        lastMessage: text,
-        lastTimestamp: new Date().toISOString()
+        lastMessage: text, lastTimestamp: new Date().toISOString()
       });
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   };
 
   if (loading) return (
-    <div className="h-[calc(100vh-64px)] w-full flex items-center justify-center">
-      <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#080808' }}>
+      <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'rgba(255,255,255,0.3)' }} />
     </div>
   );
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col pt-4">
-      {/* Chat Header */}
-      <div className="max-w-4xl w-full mx-auto px-4 mb-4">
-        <div className="bg-white rounded-[32px] border border-slate-100 p-4 shadow-lg shadow-slate-200/50 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/chats')} className="p-2 hover:bg-slate-50 rounded-full transition-colors text-slate-500">
-              <ArrowLeft className="w-6 h-6" />
-            </button>
+    <div className="h-screen flex flex-col" style={{ background: '#080808', fontFamily: "'DM Sans', sans-serif" }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+
+      {/* Ambient */}
+      <div className="fixed inset-0 pointer-events-none -z-0">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full blur-[120px]" style={{ background: 'rgba(160,30,30,0.12)' }} />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] rounded-full blur-[100px]" style={{ background: 'rgba(120,50,0,0.1)' }} />
+      </div>
+
+      {/* Header */}
+      <div className="relative z-10 px-4 pt-20 pb-3">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center justify-between p-3 rounded-2xl"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black">
-               {chat?.productTitle.charAt(0)}
+              <button onClick={() => navigate('/chats')}
+                className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+                style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}
+                onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'white'}
+                onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.5)'}>
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-medium"
+                style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.7)' }}>
+                {chat?.productTitle.charAt(0)}
               </div>
               <div>
-                <h2 className="font-extrabold text-slate-900 leading-none mb-1">{chat?.productTitle}</h2>
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                  <span>Online now</span>
+                <h2 className="text-sm font-medium text-white leading-none mb-1">{chat?.productTitle}</h2>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(100,220,150,0.8)' }} />
+                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Online now</span>
                 </div>
               </div>
             </div>
+            <Link to={`/product/${chat?.productId}`}
+              className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full text-xs transition-all"
+              style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.8)'}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.4)'}>
+              <ShoppingBag className="w-3 h-3" />
+              View Item
+            </Link>
           </div>
-          <Link to={`/product/${chat?.productId}`} className="hidden sm:flex items-center gap-2 px-6 py-2 bg-slate-50 hover:bg-slate-100 rounded-full transition-colors text-xs font-bold text-slate-600 border border-slate-100">
-            <ShoppingBag className="w-4 h-4" />
-            <span>View Item</span>
-          </Link>
         </div>
       </div>
 
-      {/* Product Mini Info */}
+      {/* Product mini card */}
       <AnimatePresence>
         {product && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-4xl w-full mx-auto px-4 mb-4"
+            className="relative z-10 px-4 pb-3"
           >
-            <div className="bg-blue-600 rounded-3xl p-4 text-white flex items-center justify-between shadow-xl shadow-blue-200 overflow-hidden relative">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16" />
-              <div className="flex items-center gap-4 relative z-10">
-                <img src={product.images[0]} className="w-12 h-12 rounded-xl object-cover border-2 border-blue-400" alt="" />
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-blue-100 leading-none mb-1">Active Negotiation</p>
-                  <p className="font-bold text-sm leading-none">${product.price}</p>
+            <div className="max-w-3xl mx-auto">
+              <div className="p-3 rounded-2xl flex items-center justify-between overflow-hidden relative"
+                style={{ background: 'rgba(180,60,20,0.15)', border: '1px solid rgba(200,80,20,0.2)' }}>
+                <div className="absolute inset-0 blur-[40px]" style={{ background: 'rgba(160,40,10,0.1)' }} />
+                <div className="flex items-center gap-3 relative z-10">
+                  <img src={product.images[0]} className="w-10 h-10 rounded-xl object-cover"
+                    style={{ border: '1px solid rgba(255,255,255,0.1)' }} alt="" />
+                  <div>
+                    <p className="text-xs" style={{ color: 'rgba(255,180,100,0.6)', letterSpacing: '0.08em' }}>ACTIVE NEGOTIATION</p>
+                    <p className="text-sm font-medium text-white">₹{product.price}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-3 relative z-10">
-                <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-white/20 rounded-full text-[10px] font-black uppercase tracking-widest">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full relative z-10"
+                  style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}>
                   <ShieldCheck className="w-3 h-3" />
-                  <span>Safe Trade</span>
+                  <span className="text-xs">Safe Trade</span>
                 </div>
               </div>
             </div>
@@ -151,35 +146,39 @@ const ChatRoom = () => {
       </AnimatePresence>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 scroll-smooth">
-        <div className="max-w-4xl mx-auto space-y-6 pb-8">
-          <div className="flex justify-center py-8">
-            <div className="bg-slate-100 px-4 py-1.5 rounded-full text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+      <div className="flex-1 overflow-y-auto px-4 relative z-10">
+        <div className="max-w-3xl mx-auto space-y-4 py-6">
+          {/* Date chip */}
+          <div className="flex justify-center">
+            <div className="px-4 py-1.5 rounded-full text-xs"
+              style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.06)' }}>
               Trade initiated {format(new Date(chat?.createdAt || Date.now()), 'PPP')}
             </div>
           </div>
 
-          {messages.map((msg, i) => {
+          {messages.map((msg) => {
             const isMe = msg.senderId === user?.id;
             return (
-              <motion.div 
+              <motion.div
                 key={msg.id}
                 initial={{ opacity: 0, x: isMe ? 20 : -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className={cn(
-                  "flex flex-col max-w-[80%]",
-                  isMe ? "ml-auto items-end" : "mr-auto items-start"
-                )}
+                className={cn("flex flex-col max-w-[75%]", isMe ? "ml-auto items-end" : "mr-auto items-start")}
               >
-                <div className={cn(
-                  "px-5 py-3.5 rounded-[24px] font-medium text-sm transition-all",
-                  isMe 
-                    ? "bg-blue-600 text-white rounded-br-none shadow-lg shadow-blue-100" 
-                    : "bg-white text-slate-700 border border-slate-100 rounded-bl-none shadow-sm"
-                )}>
+                <div className="px-4 py-3 rounded-2xl text-sm"
+                  style={isMe ? {
+                    background: 'rgba(255,255,255,0.9)',
+                    color: '#0A0A0A',
+                    borderBottomRightRadius: '6px',
+                  } : {
+                    background: 'rgba(255,255,255,0.07)',
+                    color: 'rgba(255,255,255,0.7)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderBottomLeftRadius: '6px',
+                  }}>
                   {msg.text}
                 </div>
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-2 px-1">
+                <span className="text-xs mt-1.5 px-1" style={{ color: 'rgba(255,255,255,0.2)' }}>
                   {format(new Date(msg.timestamp), 'p')}
                 </span>
               </motion.div>
@@ -189,32 +188,40 @@ const ChatRoom = () => {
         </div>
       </div>
 
-      {/* Input Area */}
-      <div className="bg-white/80 backdrop-blur-xl border-t border-slate-100 p-4 pb-8 md:pb-6">
-        <div className="max-w-4xl mx-auto">
-          <form onSubmit={handleSend} className="flex gap-4">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Type your message..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                className="w-full pl-6 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-[24px] focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 outline-none transition-all font-medium text-sm"
-              />
-            </div>
-            <button 
-              type="submit"
-              disabled={!newMessage.trim()}
-              className="w-14 h-14 bg-blue-600 text-white rounded-[24px] flex items-center justify-center shadow-xl shadow-blue-200 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50"
-            >
-              <Send className="w-6 h-6" />
+      {/* Input */}
+      <div className="relative z-10 px-4 pb-6 pt-3"
+        style={{ background: 'rgba(8,8,8,0.9)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div className="max-w-3xl mx-auto">
+          <form onSubmit={handleSend} className="flex gap-3">
+            <input
+              type="text"
+              placeholder="Type your message..."
+              value={newMessage}
+              onChange={e => setNewMessage(e.target.value)}
+              className="flex-1 px-5 py-3.5 rounded-2xl text-sm outline-none transition-all"
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                color: 'rgba(255,255,255,0.8)',
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+              onFocus={e => e.target.style.borderColor = 'rgba(255,255,255,0.2)'}
+              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
+            />
+            <button type="submit" disabled={!newMessage.trim()}
+              className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all active:scale-95"
+              style={{
+                background: newMessage.trim() ? 'white' : 'rgba(255,255,255,0.08)',
+                color: newMessage.trim() ? 'black' : 'rgba(255,255,255,0.2)',
+              }}>
+              <Send className="w-4 h-4" />
             </button>
           </form>
-          <div className="mt-3 text-center">
-             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-1.5">
-               <ShieldCheck className="w-3 h-3" />
-               Your messages are encrypted and restricted to {user?.college}
-             </p>
+          <div className="mt-3 flex items-center justify-center gap-1.5">
+            <ShieldCheck className="w-3 h-3" style={{ color: 'rgba(255,255,255,0.15)' }} />
+            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.15)' }}>
+              Messages restricted to {user?.college}
+            </p>
           </div>
         </div>
       </div>

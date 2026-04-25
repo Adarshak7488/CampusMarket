@@ -3,8 +3,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../lib/firebase';
-import { Mail, Lock, User, GraduationCap, Loader2, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, User, GraduationCap, Loader2, AlertCircle, ShoppingBag } from 'lucide-react';
 import { motion } from 'motion/react';
+
+const inputStyle = {
+  background: 'rgba(255,255,255,0.05)',
+  border: '1px solid rgba(255,255,255,0.08)',
+  color: 'rgba(255,255,255,0.8)',
+  fontFamily: "'DM Sans', sans-serif",
+};
 
 const Signup = () => {
   const [name, setName] = useState('');
@@ -19,168 +26,183 @@ const Signup = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
-    // Basic college email validation
-    if (!email.endsWith('.edu') && !email.includes('college') && !email.includes('university') && !email.includes('ac.in')) {
-      // Allowing more for demo purposes but warning
-      console.log('Non-edu email used');
-    }
-
     try {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
-      
       await updateProfile(user, { displayName: name });
-
-      // Create user document
       await setDoc(doc(db, 'users', user.uid), {
-        name,
-        email,
-        college,
+        name, email, college,
         joinedAt: new Date().toISOString(),
         rating: 5.0,
         avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`
       });
-
       navigate('/dashboard');
     } catch (err: any) {
-      console.error(err);
       setError(err.message || 'Failed to create account.');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.style.borderColor = 'rgba(255,255,255,0.2)';
+  };
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.style.borderColor = 'rgba(255,255,255,0.08)';
+  };
+
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center p-4 bg-slate-50">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+      style={{ background: '#080808', fontFamily: "'DM Sans', sans-serif" }}>
+
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+
+      {/* Ambient blobs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] rounded-full blur-[120px]" style={{ background: 'rgba(180,30,30,0.1)' }} />
+        <div className="absolute bottom-1/3 right-1/4 w-[300px] h-[300px] rounded-full blur-[100px]" style={{ background: 'rgba(80,40,0,0.12)' }} />
+      </div>
+
+      {/* Grid */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
+        style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-xl w-full"
+        transition={{ duration: 0.7 }}
+        className="w-full max-w-2xl relative z-10"
       >
-        <div className="grid md:grid-cols-2 bg-white rounded-[32px] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-          <div className="bg-blue-600 p-10 text-white flex flex-col justify-center gap-6">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-              <ShieldCheck className="w-7 h-7" />
-            </div>
-            <div>
-              <h2 className="text-3xl font-extrabold mb-4 leading-tight">Student Only Community.</h2>
-              <p className="text-blue-100 font-medium">Join 5,000+ verified students buying and selling safely on campus.</p>
-            </div>
-            <div className="space-y-4 pt-4">
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-blue-500/50 flex flex-shrink-0 items-center justify-center text-[10px] font-bold">✓</div>
-                <span className="text-sm font-medium">Verified .edu emails</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-blue-500/50 flex flex-shrink-0 items-center justify-center text-[10px] font-bold">✓</div>
-                <span className="text-sm font-medium">In-app messaging</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 rounded-full bg-blue-500/50 flex flex-shrink-0 items-center justify-center text-[10px] font-bold">✓</div>
-                <span className="text-sm font-medium">Zero platform fees</span>
-              </div>
-            </div>
+        {/* Logo */}
+        <div className="flex items-center justify-center gap-2 mb-10">
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+            <ShoppingBag className="w-4 h-4 text-black" />
           </div>
+          <span className="text-white/70 font-medium">CampusMarket</span>
+        </div>
 
-          <div className="p-8">
-            <div className="text-center md:text-left mb-6">
-              <h1 className="text-2xl font-extrabold text-slate-900 mb-2">Create Account</h1>
-              <p className="text-slate-500 font-medium">Get started in seconds</p>
+        {/* Card */}
+        <div className="rounded-3xl overflow-hidden border" style={{ borderColor: 'rgba(255,255,255,0.07)' }}>
+          <div className="grid md:grid-cols-2">
+
+            {/* Left panel */}
+            <div className="p-10 flex flex-col justify-center relative overflow-hidden"
+              style={{ background: 'rgba(255,255,255,0.04)', borderRight: '1px solid rgba(255,255,255,0.07)' }}>
+              <div className="absolute top-0 right-0 w-40 h-40 rounded-full blur-[80px]" style={{ background: 'rgba(200,50,50,0.15)' }} />
+              <div className="relative z-10">
+                <h2 className="text-3xl font-light text-white mb-3 leading-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>
+                  Student only<br /><em className="italic text-white/40">community.</em>
+                </h2>
+                <p className="text-sm mb-8" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  Join 5,000+ verified students buying and selling safely on campus.
+                </p>
+                <div className="space-y-4">
+                  {['Verified .edu emails', 'In-app messaging', 'Zero platform fees'].map((item) => (
+                    <div key={item} className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <svg width="8" height="6" viewBox="0 0 8 6" fill="none">
+                          <path d="M1 3L3 5L7 1" stroke="rgba(255,255,255,0.6)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                      <span className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-100 text-red-600 rounded-2xl flex items-center gap-3 text-xs font-medium">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                <span>{error}</span>
+            {/* Right panel — form */}
+            <div className="p-8" style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <div className="mb-6">
+                <h1 className="text-2xl font-light text-white mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>
+                  Create account
+                </h1>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>Get started in seconds</p>
               </div>
-            )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 ml-1">Full Name</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                      <User className="w-4 h-4" />
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mb-5 p-3 rounded-2xl flex items-center gap-3 text-xs"
+                  style={{ background: 'rgba(220,50,50,0.1)', border: '1px solid rgba(220,50,50,0.2)', color: '#f87171' }}
+                >
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>{error}</span>
+                </motion.div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs mb-1.5 ml-1" style={{ color: 'rgba(255,255,255,0.25)', letterSpacing: '0.05em' }}>FULL NAME</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                        <User className="w-4 h-4" />
+                      </div>
+                      <input type="text" required value={name} onChange={e => setName(e.target.value)}
+                        placeholder="Alex Smith"
+                        className="block w-full pl-9 pr-3 py-2.5 rounded-xl text-sm outline-none transition-all"
+                        style={inputStyle} onFocus={handleFocus} onBlur={handleBlur} />
                     </div>
-                    <input
-                      type="text"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="block w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all font-medium text-slate-900 text-sm"
-                      placeholder="Alex Smith"
-                    />
                   </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 ml-1">College/Uni</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                      <GraduationCap className="w-4 h-4" />
+                  <div>
+                    <label className="block text-xs mb-1.5 ml-1" style={{ color: 'rgba(255,255,255,0.25)', letterSpacing: '0.05em' }}>COLLEGE</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                        <GraduationCap className="w-4 h-4" />
+                      </div>
+                      <input type="text" required value={college} onChange={e => setCollege(e.target.value)}
+                        placeholder="SAGE Uni"
+                        className="block w-full pl-9 pr-3 py-2.5 rounded-xl text-sm outline-none transition-all"
+                        style={inputStyle} onFocus={handleFocus} onBlur={handleBlur} />
                     </div>
-                    <input
-                      type="text"
-                      required
-                      value={college}
-                      onChange={(e) => setCollege(e.target.value)}
-                      className="block w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all font-medium text-slate-900 text-sm"
-                      placeholder="Harvard"
-                    />
                   </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 ml-1">College Email</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <Mail className="w-4 h-4" />
+                <div>
+                  <label className="block text-xs mb-1.5 ml-1" style={{ color: 'rgba(255,255,255,0.25)', letterSpacing: '0.05em' }}>COLLEGE EMAIL</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+                      placeholder="student@college.edu"
+                      className="block w-full pl-9 pr-3 py-2.5 rounded-xl text-sm outline-none transition-all"
+                      style={inputStyle} onFocus={handleFocus} onBlur={handleBlur} />
                   </div>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all font-medium text-slate-900 text-sm"
-                    placeholder="student@college.edu"
-                  />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5 ml-1">Password</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <Lock className="w-4 h-4" />
+                <div>
+                  <label className="block text-xs mb-1.5 ml-1" style={{ color: 'rgba(255,255,255,0.25)', letterSpacing: '0.05em' }}>PASSWORD</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <input type="password" required value={password} onChange={e => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="block w-full pl-9 pr-3 py-2.5 rounded-xl text-sm outline-none transition-all"
+                      style={inputStyle} onFocus={handleFocus} onBlur={handleBlur} />
                   </div>
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all font-medium text-slate-900 text-sm"
-                    placeholder="••••••••"
-                  />
                 </div>
+
+                <button type="submit" disabled={loading}
+                  className="w-full py-3 rounded-full text-sm font-medium transition-all flex items-center justify-center gap-2 mt-2"
+                  style={{ background: loading ? 'rgba(255,255,255,0.7)' : 'white', color: 'black', cursor: loading ? 'not-allowed' : 'pointer' }}>
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create account'}
+                </button>
+              </form>
+
+              <div className="mt-6 text-center">
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                  Already have an account?{' '}
+                  <Link to="/login" style={{ color: 'rgba(255,255,255,0.5)' }}
+                    onMouseEnter={e => (e.target as HTMLElement).style.color = 'white'}
+                    onMouseLeave={e => (e.target as HTMLElement).style.color = 'rgba(255,255,255,0.5)'}>
+                    Log in
+                  </Link>
+                </p>
               </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-2.5 btn-primary text-sm shadow-md shadow-blue-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
-              >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
-              </button>
-            </form>
-
-            <div className="mt-8 text-center">
-              <p className="text-slate-500 font-medium text-sm">
-                Already have an account?{' '}
-                <Link to="/login" className="text-blue-600 font-bold hover:underline">
-                  Log In
-                </Link>
-              </p>
             </div>
           </div>
         </div>

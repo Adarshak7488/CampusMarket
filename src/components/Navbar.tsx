@@ -1,15 +1,21 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingBag, MessageSquare, User, LogOut, Menu, X } from 'lucide-react';
+import { MessageSquare, User, LogOut, Menu, X, ShoppingBag } from 'lucide-react';
 import { useAuth } from '../lib/AuthContext';
 import { auth } from '../lib/firebase';
-import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const Navbar = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [scrolled, setScrolled] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = async () => {
     await auth.signOut();
@@ -17,41 +23,61 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="glass-nav h-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+    <nav
+      className="fixed top-0 left-0 right-0 z-50 h-16 transition-all duration-500"
+      style={{
+        background: scrolled ? 'rgba(8,8,8,0.85)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(20px)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(255,255,255,0.05)' : '1px solid transparent',
+        fontFamily: "'DM Sans', sans-serif",
+      }}
+    >
+      <div className="max-w-6xl mx-auto px-6 h-full">
         <div className="flex justify-between h-full items-center">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-blue-200">
-                C
-              </div>
-              <span className="text-xl font-bold tracking-tight text-slate-800">Campus<span className="text-blue-600">Market</span></span>
-            </Link>
-          </div>
+
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <div className="w-7 h-7 bg-white rounded-lg flex items-center justify-center transition-transform group-hover:scale-110">
+              <ShoppingBag className="w-4 h-4 text-black" />
+            </div>
+            <span className="text-sm font-medium text-white/80 group-hover:text-white transition-colors">
+              Campus<span className="text-white/40">Market</span>
+            </span>
+          </Link>
 
           {/* Desktop Nav */}
-          <div className="hidden md:flex items-center space-x-8">
-            <Link to="/marketplace" className="text-slate-500 hover:text-blue-600 font-medium text-sm transition-colors">Marketplace</Link>
+          <div className="hidden md:flex items-center gap-8">
+            <Link to="/marketplace" className="text-white/40 hover:text-white/80 text-sm transition-colors">
+              Marketplace
+            </Link>
             {user ? (
               <>
-                <Link to="/chats" className="text-slate-500 hover:text-blue-600 transition-colors">
-                  <MessageSquare className="w-5 h-5" />
+                <Link to="/chats" className="text-white/40 hover:text-white/80 transition-colors">
+                  <MessageSquare className="w-4 h-4" />
                 </Link>
-                <Link to="/dashboard" className="text-slate-500 hover:text-blue-600 transition-colors">
-                  <User className="w-5 h-5" />
+                <Link to="/dashboard" className="text-white/40 hover:text-white/80 transition-colors">
+                  <User className="w-4 h-4" />
                 </Link>
-                <button onClick={handleLogout} className="text-slate-500 hover:text-red-600 transition-colors">
-                  <LogOut className="w-5 h-5" />
+                <button onClick={handleLogout} className="text-white/40 hover:text-red-400 transition-colors">
+                  <LogOut className="w-4 h-4" />
                 </button>
-                <Link to="/sell" className="btn-primary px-5 py-2.5 text-sm shadow-md shadow-blue-100">
+                <Link
+                  to="/sell"
+                  className="px-5 py-2 bg-white text-black text-sm font-medium rounded-full hover:bg-white/90 transition-all"
+                >
                   Sell Item
                 </Link>
               </>
             ) : (
               <>
-                <Link to="/login" className="text-slate-500 hover:text-blue-600 font-medium text-sm transition-colors">Login</Link>
-                <Link to="/signup" className="btn-primary px-5 py-2.5 text-sm shadow-md shadow-blue-100">
-                  Join Now
+                <Link to="/login" className="text-white/40 hover:text-white/80 text-sm transition-colors">
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="px-5 py-2 bg-white text-black text-sm font-medium rounded-full hover:bg-white/90 transition-all"
+                >
+                  Join Free
                 </Link>
               </>
             )}
@@ -59,8 +85,11 @@ export const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <div className="md:hidden">
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-slate-600 p-2">
-              {isMenuOpen ? <X /> : <Menu />}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-white/50 hover:text-white transition-colors p-2"
+            >
+              {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
@@ -73,21 +102,32 @@ export const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white border-t border-slate-100 overflow-hidden"
+            className="md:hidden overflow-hidden"
+            style={{
+              background: 'rgba(8,8,8,0.95)',
+              backdropFilter: 'blur(20px)',
+              borderBottom: '1px solid rgba(255,255,255,0.05)',
+            }}
           >
-            <div className="px-4 pt-2 pb-6 space-y-2">
-              <Link to="/marketplace" className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50">Marketplace</Link>
+            <div className="px-6 pt-3 pb-6 space-y-1">
+              <Link
+                to="/marketplace"
+                onClick={() => setIsMenuOpen(false)}
+                className="block px-3 py-3 text-sm text-white/50 hover:text-white transition-colors"
+              >
+                Marketplace
+              </Link>
               {user ? (
                 <>
-                  <Link to="/chats" className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50">Messages</Link>
-                  <Link to="/dashboard" className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50">Dashboard</Link>
-                  <Link to="/sell" className="block px-3 py-2 rounded-md text-base font-medium text-blue-600 hover:bg-blue-50">Sell Item</Link>
-                  <button onClick={handleLogout} className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50">Logout</button>
+                  <Link to="/chats" onClick={() => setIsMenuOpen(false)} className="block px-3 py-3 text-sm text-white/50 hover:text-white transition-colors">Messages</Link>
+                  <Link to="/dashboard" onClick={() => setIsMenuOpen(false)} className="block px-3 py-3 text-sm text-white/50 hover:text-white transition-colors">Dashboard</Link>
+                  <Link to="/sell" onClick={() => setIsMenuOpen(false)} className="block px-3 py-3 text-sm text-white/80 hover:text-white transition-colors">Sell Item</Link>
+                  <button onClick={handleLogout} className="w-full text-left px-3 py-3 text-sm text-red-400/70 hover:text-red-400 transition-colors">Logout</button>
                 </>
               ) : (
                 <>
-                  <Link to="/login" className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50">Login</Link>
-                  <Link to="/signup" className="block px-3 py-2 rounded-md text-base font-medium text-blue-600 hover:bg-blue-50">Join Now</Link>
+                  <Link to="/login" onClick={() => setIsMenuOpen(false)} className="block px-3 py-3 text-sm text-white/50 hover:text-white transition-colors">Login</Link>
+                  <Link to="/signup" onClick={() => setIsMenuOpen(false)} className="block mt-2 mx-3 px-5 py-2.5 bg-white text-black text-sm font-medium rounded-full text-center hover:bg-white/90 transition-all">Join Free</Link>
                 </>
               )}
             </div>

@@ -46,8 +46,9 @@ const Marketplace = () => {
 
       {/* Ambient */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-0">
-        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full blur-[140px]" style={{ background: 'rgba(120,20,20,0.08)' }} />
-        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full blur-[120px]" style={{ background: 'rgba(60,40,0,0.08)' }} />
+        <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'rgba(180,30,30,0.18)' }} />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[90px]" style={{ background: 'rgba(140,60,0,0.15)' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full blur-[110px]" style={{ background: 'rgba(160,40,10,0.12)' }} />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">

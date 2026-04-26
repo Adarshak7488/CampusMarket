@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, query, where, orderBy, onSnapshot, getDoc, doc } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useAuth } from '../lib/AuthContext';
 import { Chat } from '../types';
-import { MessageSquare, ShoppingBag, Clock, Search, ChevronRight, Loader2, MessageCircleX } from 'lucide-react';
+import { ShoppingBag, Clock, Search, ChevronRight, Loader2, MessageCircleX } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { motion, AnimatePresence } from 'motion/react';
-import { cn } from '../lib/utils';
+import { motion } from 'motion/react';
 
 const ChatList = () => {
   const { user } = useAuth();
@@ -17,102 +16,159 @@ const ChatList = () => {
 
   useEffect(() => {
     if (!user) return;
-
     const q = query(
       collection(db, 'chats'),
       where('participants', 'array-contains', user.id),
       orderBy('lastTimestamp', 'desc')
     );
-
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const chatData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Chat));
-      setChats(chatData);
+      setChats(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Chat)));
       setLoading(false);
     });
-
     return unsubscribe;
   }, [user]);
 
-  const filteredChats = chats.filter(c => 
+  const filteredChats = chats.filter(c =>
     c.productTitle.toLowerCase().includes(search.toLowerCase())
   );
 
   if (loading) return (
-    <div className="h-[calc(100vh-64px)] w-full flex items-center justify-center">
-      <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#080808' }}>
+      <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'rgba(255,255,255,0.3)' }} />
     </div>
   );
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-        <div>
-          <h1 className="text-4xl font-black text-slate-900 mb-2">My Messages</h1>
-          <p className="text-slate-500 font-medium">Coordinate your campus trades securely.</p>
-        </div>
-        
-        <div className="relative flex-1 max-w-sm">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-            <Search className="w-4 h-4" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search conversations..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="block w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-sm focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 outline-none transition-all font-medium text-sm"
-          />
-        </div>
+    <div className="min-h-screen pt-20 pb-20 relative overflow-hidden"
+      style={{ background: '#080808', fontFamily: "'DM Sans', sans-serif" }}>
+
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+
+      {/* Ambient */}
+      <div className="fixed inset-0 pointer-events-none -z-0">
+        <div className="absolute top-1/4 left-1/3 w-[600px] h-[600px] rounded-full blur-[100px]" style={{ background: 'rgba(180,30,30,0.18)' }} />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full blur-[90px]" style={{ background: 'rgba(140,60,0,0.15)' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full blur-[110px]" style={{ background: 'rgba(160,40,10,0.12)' }} />
       </div>
 
-      <div className="bg-white rounded-[40px] border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden">
-        {filteredChats.length > 0 ? (
-          <div className="divide-y divide-slate-50">
-            {filteredChats.map((chat) => (
-              <Link 
-                key={chat.id} 
-                to={`/chat/${chat.id}`}
-                className="flex items-center gap-5 p-6 hover:bg-slate-50 transition-all cursor-pointer group"
-              >
-                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex flex-shrink-0 items-center justify-center text-blue-600 font-black text-xl border border-blue-200">
-                  {chat.productTitle.charAt(0)}
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="font-bold text-slate-900 truncate pr-4 group-hover:text-blue-600 transition-colors">
-                      {chat.productTitle}
-                    </h3>
-                    <div className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
-                      <Clock className="w-3 h-3 mr-1" />
-                      {formatDistanceToNow(new Date(chat.lastTimestamp))}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <ShoppingBag className="w-3 h-3 text-slate-400" />
-                    <span className="text-xs font-bold text-slate-400 truncate">Item Inquiry</span>
-                  </div>
-                  <p className="text-slate-500 text-sm line-clamp-1 font-medium italic">
-                    "{chat.lastMessage}"
-                  </p>
-                </div>
-                
-                <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
-              </Link>
-            ))}
+      {/* Grid */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.025] -z-0"
+        style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+
+      <div className="relative z-10 max-w-3xl mx-auto px-6">
+
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10"
+        >
+          <div>
+            <p className="text-xs mb-2" style={{ color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em' }}>MESSAGES</p>
+            <h1 className="text-4xl font-light text-white" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              My <em className="italic" style={{ color: 'rgba(255,255,255,0.35)' }}>chats.</em>
+            </h1>
+            <p className="text-sm mt-2" style={{ color: 'rgba(255,255,255,0.25)' }}>
+              Coordinate your campus trades securely.
+            </p>
           </div>
-        ) : (
-          <div className="p-20 text-center flex flex-col items-center justify-center">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-6">
-              <MessageCircleX className="w-10 h-10" />
+
+          {/* Search */}
+          <div className="relative flex-1 max-w-xs">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none" style={{ color: 'rgba(255,255,255,0.2)' }}>
+              <Search className="w-4 h-4" />
             </div>
-            <h3 className="text-xl font-bold text-slate-800 mb-2">No messages yet</h3>
-            <p className="text-slate-500 max-w-xs font-medium">Conversations with buyers or sellers will appear here once you start chatting.</p>
-            <Link to="/marketplace" className="mt-8 px-8 py-3 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">
-               Browse Marketplace
-            </Link>
+            <input
+              type="text"
+              placeholder="Search conversations..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="block w-full pl-10 pr-4 py-3 rounded-2xl text-sm outline-none transition-all"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                color: 'rgba(255,255,255,0.7)',
+                fontFamily: "'DM Sans', sans-serif",
+              }}
+              onFocus={e => e.target.style.borderColor = 'rgba(255,255,255,0.2)'}
+              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.08)'}
+            />
           </div>
-        )}
+        </motion.div>
+
+        {/* Chat list */}
+        <div className="rounded-3xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+          {filteredChats.length > 0 ? (
+            <div>
+              {filteredChats.map((chat, i) => (
+                <motion.div
+                  key={chat.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                >
+                  <Link
+                    to={`/chat/${chat.id}`}
+                    className="flex items-center gap-4 p-5 transition-all group"
+                    style={{ borderBottom: i < filteredChats.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)'}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = 'transparent'}
+                  >
+                    {/* Avatar */}
+                    <div className="w-12 h-12 rounded-2xl flex flex-shrink-0 items-center justify-center text-base font-medium flex-shrink-0"
+                      style={{ background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      {chat.productTitle.charAt(0)}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start mb-1">
+                        <h3 className="text-sm font-medium truncate pr-4 transition-colors"
+                          style={{ color: 'rgba(255,255,255,0.8)' }}>
+                          {chat.productTitle}
+                        </h3>
+                        <div className="flex items-center gap-1 text-xs whitespace-nowrap flex-shrink-0"
+                          style={{ color: 'rgba(255,255,255,0.2)' }}>
+                          <Clock className="w-3 h-3" />
+                          {formatDistanceToNow(new Date(chat.lastTimestamp))}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <ShoppingBag className="w-3 h-3" style={{ color: 'rgba(255,255,255,0.2)' }} />
+                        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.2)' }}>Item Inquiry</span>
+                      </div>
+                      <p className="text-xs line-clamp-1 italic" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                        "{chat.lastMessage}"
+                      </p>
+                    </div>
+
+                    <ChevronRight className="w-4 h-4 flex-shrink-0 transition-transform group-hover:translate-x-1"
+                      style={{ color: 'rgba(255,255,255,0.15)' }} />
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-16 text-center flex flex-col items-center justify-center"
+              style={{ background: 'rgba(255,255,255,0.02)' }}>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mb-5"
+                style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <MessageCircleX className="w-8 h-8" style={{ color: 'rgba(255,255,255,0.15)' }} />
+              </div>
+              <h3 className="text-lg font-light text-white mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>
+                No messages yet
+              </h3>
+              <p className="text-sm mb-8 max-w-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                Conversations with buyers or sellers will appear here once you start chatting.
+              </p>
+              <Link to="/marketplace"
+                className="px-6 py-3 rounded-full text-sm transition-all"
+                style={{ background: 'white', color: 'black' }}>
+                Browse Marketplace
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
